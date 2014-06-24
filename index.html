@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+	<title>Presentation Timer</title>
+	<link rel="stylesheet" type="text/css" href="//cdnjs.cloudflare.com/ajax/libs/normalize/3.0.1/normalize.min.css"/>
+	<style>
+		body {
+			font-family: sans-serif;
+			padding: 5vmin 0 5vmin;
+		}
+		body * {
+			box-sizing: border-box;
+		}
+		#counter {
+			margin: auto;
+			text-align: center;
+		}
+		#counter .value,
+		#counter .unit {
+			display: block;
+			margin: auto;
+		}
+		#counter .value {
+			font-size: 70vmin;
+			height: 1em;
+			max-width: 100%;
+			line-height: 1em;
+			padding: 10px;
+			overflow: hidden;
+		}
+		#counter .value[contenteditable='true'] {
+			display: inline-block;
+			border-radius: 4px;
+			background: #EBEBEB;
+			outline: none;
+			border: 1px solid #ADADAD;
+			box-shadow: 0px 0px 5px #ADADAD inset;
+			min-width: 1.5ex;
+			vertical-align: middle;
+		}
+		#counter .unit {
+			margin-top: 1vmin;
+			font-size: 5vmin;
+			height: 1em;
+		}
+
+		#controls {
+			text-align: center;
+			margin-top: 5vmin;
+		}
+		.button {
+			display: inline-block;
+			padding: 6px 12px;
+			margin-bottom: 0;
+			font-weight: normal;
+			font-size: 14px;
+			text-align: center;
+			white-space: nowrap;
+			vertical-align: middle;
+			cursor: pointer;
+			border: 1px solid #ccc;
+			border-radius: 4px;
+			color: #333;
+			background-color: #fff;
+			text-decoration: none;
+		}
+		.button:focus{
+			outline: thin dotted;
+			outline-offset: -2px;
+		}
+		.button:hover,
+		.button:focus {
+			text-decoration: none;
+			background-color: #EBEBEB;
+			border-color: #ADADAD;
+		}
+		.button:active {
+			outline: 0;
+			box-shadow: inset 0 3px 5px rgba(0, 0, 0, .125);
+		}
+	</style>
+</head>
+<body>
+	<div id="counter">
+		<div class="value" contenteditable="true">15</div>
+		<div class="unit">minutes</div>
+	</div>
+	<div id="controls">
+		<a id="start" class="button" href="#">Start</a>
+		<a id="reset" class="button" href="#" style="display: none;">Reset</a>
+	</div>
+
+	<script src="//code.jquery.com/jquery-2.1.1.min.js"></script>
+	<script>
+	$(function () {
+		var period;
+		var endTime;
+		var frame;
+
+		var start = function () {
+			$('#start').hide();
+			$('#counter').find('.value').attr('contenteditable', 'false');
+
+			var now = new Date();
+			period = (Number.parseInt || parseInt)($('#counter .value').text());
+			endTime = new Date(now.getTime() + (period * 60 * 1000));
+			update();
+		}
+
+		var update = function () {
+			var value;
+			var unit;
+			var milliseconds = endTime.getTime() - (new Date()).getTime();
+			var seconds = Math.ceil(milliseconds / 1000);
+			var minutes = Math.ceil(seconds / 60);
+
+			if (milliseconds <= 0) {
+				value = 0;
+				unit = '';
+			}
+			else if (seconds <= 30) {
+				value = seconds;
+				unit = 'seconds';
+			}
+			else if (seconds <= 60) {
+				value = (Math.ceil(seconds / 5) * 5)
+				unit = 'seconds';
+			}
+			else if (minutes <= 10) {
+				value = minutes;
+				unit = 'minutes';
+			}
+			else {
+				value = (Math.ceil(minutes / 5) * 5);
+				value = Math.min (value, period);
+				unit = 'minutes';
+			}
+
+			$('#counter')
+				.find('.value').text(value).end()
+				.find('.unit').text(unit);
+
+			if (milliseconds > 0) {
+				setTimeout(function () {
+					frame = requestAnimationFrame(update);
+				}, 100);
+			}
+			else {
+				frame = null;
+				complete();
+			}
+		};
+
+		var complete = function () {
+			$('#reset').show();
+		};
+
+		var reset = function () {
+			$('#start').show();
+			$('#reset').hide();
+
+			$('#counter')
+				.find('.value').text(period).attr('contenteditable', 'true').focus().end()
+				.find('.unit').text('minutes');
+		};
+
+		$('#start').click(function (event) {
+			event.preventDefault();
+			event.stopPropagation();
+			start();
+		});
+
+		$('#reset').click(function (event) {
+			event.preventDefault();
+			event.stopPropagation();
+			reset();
+		});
+	});
+	</script>
+</body>
+</html>
